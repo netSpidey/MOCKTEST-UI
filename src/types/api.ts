@@ -15,7 +15,6 @@ export interface RegisterPayload {
   email: string;
   password: string;
   phoneNumber?: string;
-  role: 'user' | 'admin' | 'super_admin';
 }
 
 export interface CreateRolePayload {
@@ -24,6 +23,8 @@ export interface CreateRolePayload {
   description?: string;
   grantAll?: boolean;
 }
+
+export type ManageableRole = 'admin' | 'super_admin';
 
 export interface ApiEnvelope<T> {
   data: T;
@@ -45,4 +46,17 @@ export interface ActivityItem {
   title: string;
   detail: string;
   when: string;
+}
+
+export interface ExamCategory {
+  id: string;
+  title: string;
+  exams: string[];
+  accent: string;
+}
+
+export interface QuickMetric {
+  label: string;
+  value: string;
+  caption: string;
 }

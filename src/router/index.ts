@@ -1,24 +1,34 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import AdminView from '@/views/AdminView.vue';
 import DashboardView from '@/views/DashboardView.vue';
-import LoginView from '@/views/LoginView.vue';
-import RegisterView from '@/views/RegisterView.vue';
+import LandingView from '@/views/LandingView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/dashboard' },
+    {
+      path: '/',
+      name: 'landing',
+      component: LandingView,
+    },
     {
       path: '/login',
       name: 'login',
-      component: LoginView,
+      component: LandingView,
       meta: { guestOnly: true },
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView,
+      component: LandingView,
       meta: { guestOnly: true },
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/dashboard',

@@ -1,7 +1,13 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { api } from '@/lib/api';
-import type { ActivityItem, CreateRolePayload, TestSeries } from '@/types/api';
+import type {
+  ActivityItem,
+  CreateRolePayload,
+  ExamCategory,
+  QuickMetric,
+  TestSeries,
+} from '@/types/api';
 
 const demoTests: TestSeries[] = [
   {
@@ -57,9 +63,56 @@ const demoActivity: ActivityItem[] = [
   },
 ];
 
+const examCategories: ExamCategory[] = [
+  {
+    id: 'banking',
+    title: 'Banking & Insurance',
+    accent: 'gold',
+    exams: ['SBI PO', 'IBPS PO', 'IBPS Clerk', 'RBI Assistant'],
+  },
+  {
+    id: 'regulatory',
+    title: 'Regulatory',
+    accent: 'blue',
+    exams: ['RBI Grade B', 'SEBI Grade A', 'NABARD Grade A', 'SIDBI Grade A'],
+  },
+  {
+    id: 'ssc',
+    title: 'SSC/Railway',
+    accent: 'teal',
+    exams: ['SSC CGL', 'SSC CHSL', 'RRB NTPC', 'SSC MTS'],
+  },
+  {
+    id: 'state',
+    title: 'State Exams',
+    accent: 'slate',
+    exams: ['UPPSC APS', 'UPSSSC PET', 'BSSC Inter Level', 'AAI ATC'],
+  },
+];
+
+const quickMetrics: QuickMetric[] = [
+  {
+    label: 'App Downloads',
+    value: '1M+',
+    caption: 'Learners reached through mobile practice.',
+  },
+  {
+    label: 'Mock Tests Taken',
+    value: '50M+',
+    caption: 'High-volume practice sessions completed.',
+  },
+  {
+    label: 'Avg. Rating',
+    value: '4.6/5',
+    caption: 'A strong trust signal for aspirant outcomes.',
+  },
+];
+
 export const useDashboardStore = defineStore('dashboard', () => {
   const tests = ref<TestSeries[]>(demoTests);
   const activity = ref<ActivityItem[]>(demoActivity);
+  const categories = ref<ExamCategory[]>(examCategories);
+  const quickMetricsCards = ref<QuickMetric[]>(quickMetrics);
   const roleStatus = ref<'idle' | 'loading'>('idle');
   const roleMessage = ref('');
   const roleError = ref('');
@@ -96,6 +149,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
   return {
     tests,
     activity,
+    categories,
+    quickMetricsCards,
     stats,
     roleStatus,
     roleMessage,

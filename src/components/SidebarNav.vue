@@ -8,7 +8,9 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const items = [
+  { label: 'Home', to: '/' },
   { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Admin', to: '/admin' },
   { label: 'Login', to: '/login' },
   { label: 'Register', to: '/register' },
 ];

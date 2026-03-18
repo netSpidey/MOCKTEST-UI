@@ -58,7 +58,10 @@ export const api = {
       '/users/register',
       {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          role: 'user',
+        }),
       },
     );
 
