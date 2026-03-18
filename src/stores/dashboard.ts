@@ -1,0 +1,105 @@
+import { computed, ref } from 'vue';
+import { defineStore } from 'pinia';
+import { api } from '@/lib/api';
+import type { ActivityItem, CreateRolePayload, TestSeries } from '@/types/api';
+
+const demoTests: TestSeries[] = [
+  {
+    id: 'banking-001',
+    title: 'IBPS PO Full Mock 12',
+    focus: 'Prelims mixed practice',
+    questions: 100,
+    duration: '60 min',
+    difficulty: 'Moderate',
+    completion: 72,
+    nextSlot: 'Today, 7:30 PM',
+  },
+  {
+    id: 'banking-002',
+    title: 'SBI Clerk Speed Drill',
+    focus: 'Reasoning + English',
+    questions: 50,
+    duration: '35 min',
+    difficulty: 'Easy',
+    completion: 48,
+    nextSlot: 'Tomorrow, 6:00 AM',
+  },
+  {
+    id: 'banking-003',
+    title: 'Quant Accuracy Challenge',
+    focus: 'Arithmetic and DI',
+    questions: 40,
+    duration: '30 min',
+    difficulty: 'Advanced',
+    completion: 85,
+    nextSlot: 'Saturday, 9:00 AM',
+  },
+];
+
+const demoActivity: ActivityItem[] = [
+  {
+    id: 'activity-1',
+    title: 'Mock submitted',
+    detail: 'IBPS PO Full Mock 11 completed with 82 percentile.',
+    when: '2 hours ago',
+  },
+  {
+    id: 'activity-2',
+    title: 'Weak area detected',
+    detail: 'Data interpretation accuracy dropped below 60%.',
+    when: 'Yesterday',
+  },
+  {
+    id: 'activity-3',
+    title: 'Study streak',
+    detail: 'You are on a 9-day revision streak.',
+    when: 'This week',
+  },
+];
+
+export const useDashboardStore = defineStore('dashboard', () => {
+  const tests = ref<TestSeries[]>(demoTests);
+  const activity = ref<ActivityItem[]>(demoActivity);
+  const roleStatus = ref<'idle' | 'loading'>('idle');
+  const roleMessage = ref('');
+  const roleError = ref('');
+
+  const stats = computed(() => {
+    const completionAverage = Math.round(
+      tests.value.reduce((sum, test) => sum + test.completion, 0) / tests.value.length,
+    );
+
+    return [
+      { label: 'Mock Tests Scheduled', value: String(tests.value.length).padStart(2, '0'), tone: 'gold' },
+      { label: 'Average Completion', value: `${completionAverage}%`, tone: 'teal' },
+      { label: 'Focus Accuracy', value: '84%', tone: 'blue' },
+      { label: 'Current Streak', value: '09 days', tone: 'slate' },
+    ];
+  });
+
+  async function createRole(payload: CreateRolePayload, token?: string | null) {
+    roleStatus.value = 'loading';
+    roleError.value = '';
+    roleMessage.value = '';
+
+    try {
+      await api.createRole(payload, token);
+      roleMessage.value = `Role "${payload.name}" created successfully.`;
+    } catch (err) {
+      roleError.value = err instanceof Error ? err.message : 'Unable to create role';
+      throw err;
+    } finally {
+      roleStatus.value = 'idle';
+    }
+  }
+
+  return {
+    tests,
+    activity,
+    stats,
+    roleStatus,
+    roleMessage,
+    roleError,
+    createRole,
+  };
+});
