@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import SidebarNav from '@/components/SidebarNav.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useDashboardStore } from '@/stores/dashboard';
 
 const authStore = useAuthStore();
 const dashboardStore = useDashboardStore();
+const router = useRouter();
 const selectedFilter = ref('all');
 
 const filterOptions = computed(() => [
@@ -22,6 +24,10 @@ function getInitials(title: string) {
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase() ?? '')
     .join('');
+}
+
+function openExamTests(examSlug: string) {
+  router.push(`/tests/${examSlug}`);
 }
 
 onMounted(async () => {
@@ -131,7 +137,9 @@ onMounted(async () => {
                 </div>
                 <p>{{ item.subtitle }}</p>
               </div>
-              <button type="button" class="test-tile__cta">View tests</button>
+              <button type="button" class="test-tile__cta" @click="openExamTests(item.id)">
+                View tests
+              </button>
             </article>
           </div>
         </article>

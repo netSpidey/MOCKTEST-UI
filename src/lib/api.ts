@@ -5,6 +5,10 @@ import type {
   LoginResponse,
   RegisterPayload,
   SubscriptionPlanSummary,
+  TestViewResourcesResponse,
+  TestViewTestsResponse,
+  TestInstructionsResponse,
+  TestSessionResponse,
   TestCatalogSection,
 } from '@/types/api';
 
@@ -97,6 +101,55 @@ export const api = {
   async getSubscriptionPlans() {
     const response = await request<ApiEnvelope<SubscriptionPlanSummary[]>>(
       '/subscriptions/plans',
+    );
+
+    return response.data;
+  },
+
+  async getExamResources(examSlug: string, token?: string | null) {
+    const response = await request<ApiEnvelope<TestViewResourcesResponse>>(
+      `/exams/${examSlug}/resources`,
+      { token },
+    );
+
+    return response.data;
+  },
+
+  async getExamTests(
+    examSlug: string,
+    params: { seriesSlug?: string | null; tab?: string | null },
+    token?: string | null,
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params.seriesSlug) {
+      searchParams.set('seriesSlug', params.seriesSlug);
+    }
+    if (params.tab) {
+      searchParams.set('tab', params.tab);
+    }
+
+    const suffix = searchParams.toString();
+    const response = await request<ApiEnvelope<TestViewTestsResponse>>(
+      `/exams/${examSlug}/tests${suffix ? `?${suffix}` : ''}`,
+      { token },
+    );
+
+    return response.data;
+  },
+
+  async getTestInstructions(testSlug: string, token?: string | null) {
+    const response = await request<ApiEnvelope<TestInstructionsResponse>>(
+      `/tests/${testSlug}/instructions`,
+      { token },
+    );
+
+    return response.data;
+  },
+
+  async getTestSession(testSlug: string, token?: string | null) {
+    const response = await request<ApiEnvelope<TestSessionResponse>>(
+      `/tests/${testSlug}/session`,
+      { token },
     );
 
     return response.data;
