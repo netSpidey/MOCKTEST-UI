@@ -3,7 +3,10 @@ import { useAuthStore } from '@/stores/auth';
 import AdminView from '@/views/AdminView.vue';
 import DashboardView from '@/views/DashboardView.vue';
 import LandingView from '@/views/LandingView.vue';
+import TestInstructionsView from '@/views/TestInstructionsView.vue';
+import TestRunnerView from '@/views/TestRunnerView.vue';
 import TestsView from '@/views/TestsView.vue';
+import ViewTestView from '@/views/ViewTestView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -41,6 +44,24 @@ export const router = createRouter({
       path: '/tests',
       name: 'tests',
       component: TestsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tests/:examSlug',
+      name: 'test-view',
+      component: ViewTestView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tests/:examSlug/:testSlug/instructions',
+      name: 'test-instructions',
+      component: TestInstructionsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tests/:examSlug/:testSlug/start',
+      name: 'test-runner',
+      component: TestRunnerView,
       meta: { requiresAuth: true },
     },
   ],
