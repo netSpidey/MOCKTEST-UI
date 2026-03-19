@@ -25,12 +25,14 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/a
           <div class="cta-row">
             <RouterLink to="/" class="cta-button">Explore landing page</RouterLink>
             <span class="hero-banner__badge">API base: {{ apiBaseUrl }}</span>
+            <span class="hero-banner__badge">Plan: {{ authStore.currentPlanName }}</span>
           </div>
         </div>
         <div class="hero-spotlight">
           <p class="hero-spotlight__label">Account summary</p>
           <ul class="hero-spotlight__list">
             <li>Signed in as: {{ authStore.displayName }}</li>
+            <li>Current subscription: {{ authStore.currentPlanName }}</li>
             <li>Protected routes are active for dashboard access</li>
             <li>Admin and super admin roles are managed on the Admin page</li>
           </ul>

@@ -4,6 +4,8 @@ import type {
   LoginPayload,
   LoginResponse,
   RegisterPayload,
+  SubscriptionPlanSummary,
+  TestCatalogSection,
 } from '@/types/api';
 
 const API_BASE_URL =
@@ -74,6 +76,28 @@ export const api = {
       body: JSON.stringify(payload),
       token,
     });
+
+    return response.data;
+  },
+
+  async getTestCatalog(plan?: string | null) {
+    const searchParams = new URLSearchParams();
+    if (plan) {
+      searchParams.set('plan', plan);
+    }
+
+    const suffix = searchParams.toString();
+    const response = await request<ApiEnvelope<TestCatalogSection[]>>(
+      `/catalog/categories${suffix ? `?${suffix}` : ''}`,
+    );
+
+    return response.data;
+  },
+
+  async getSubscriptionPlans() {
+    const response = await request<ApiEnvelope<SubscriptionPlanSummary[]>>(
+      '/subscriptions/plans',
+    );
 
     return response.data;
   },
