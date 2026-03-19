@@ -1,7 +1,12 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { api } from '@/lib/api';
-import type { LoginPayload, LoginResponse, RegisterPayload } from '@/types/api';
+import type {
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+  SubscriptionPlanSummary,
+} from '@/types/api';
 
 const STORAGE_KEY = 'mocktest-ui-auth';
 
@@ -10,11 +15,15 @@ export const useAuthStore = defineStore('auth', () => {
   const status = ref<'idle' | 'loading'>('idle');
   const error = ref('');
   const hasHydrated = ref(false);
+  const plans = ref<SubscriptionPlanSummary[]>([]);
+  const plansStatus = ref<'idle' | 'loading'>('idle');
 
   const isAuthenticated = computed(() => Boolean(user.value?.token));
   const displayName = computed(
     () => user.value?.username || user.value?.email || 'Candidate',
   );
+  const currentPlan = computed(() => user.value?.subscriptionPlan ?? null);
+  const currentPlanName = computed(() => currentPlan.value?.name ?? 'Basic');
 
   function hydrate() {
     if (hasHydrated.value) {
@@ -67,6 +76,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function fetchPlans() {
+    plansStatus.value = 'loading';
+
+    try {
+      plans.value = await api.getSubscriptionPlans();
+    } finally {
+      plansStatus.value = 'idle';
+    }
+  }
+
   function logout() {
     user.value = null;
     error.value = '';
@@ -77,11 +96,16 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     status,
     error,
+    plans,
+    plansStatus,
     isAuthenticated,
     displayName,
+    currentPlan,
+    currentPlanName,
     hydrate,
     login,
     register,
+    fetchPlans,
     logout,
   };
 });

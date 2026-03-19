@@ -28,6 +28,11 @@ const localError = ref('');
 const successMessage = ref('');
 
 const title = computed(() => (props.mode === 'login' ? 'Login' : 'Sign Up'));
+const subtitle = computed(() =>
+  props.mode === 'login'
+    ? 'Continue your mock-test journey with your saved progress and dashboards.'
+    : 'Create your practice account and start with the default user flow.',
+);
 const primaryLabel = computed(() => {
   if (props.mode === 'login') {
     return authStore.status === 'loading' ? 'Signing in...' : 'Next';
@@ -76,7 +81,13 @@ async function submit() {
     <section class="auth-modal-card auth-dialog">
       <button type="button" class="auth-dialog__close" @click="closeDialog">x</button>
 
-      <h1 class="auth-modal-title">{{ title }}</h1>
+      <div class="auth-dialog__hero">
+        <p class="auth-dialog__eyebrow">
+          {{ mode === 'login' ? 'Welcome Back' : 'Start Free Trial' }}
+        </p>
+        <h1 class="auth-modal-title">{{ title }}</h1>
+        <p class="auth-dialog__subtitle">{{ subtitle }}</p>
+      </div>
 
       <button
         v-if="mode === 'register'"
@@ -84,7 +95,7 @@ async function submit() {
         class="auth-google-button auth-google-button--top"
       >
         <span class="auth-google-button__icon">G</span>
-        <span>Sign in with Google</span>
+        <span>Continue with Google</span>
       </button>
 
       <p v-if="mode === 'register'" class="auth-separator">Or, register with email</p>
@@ -254,7 +265,7 @@ async function submit() {
 
       <button v-if="mode === 'login'" type="button" class="auth-google-button">
         <span class="auth-google-button__icon">G</span>
-        <span>Sign in with Google</span>
+        <span>Continue with Google</span>
       </button>
 
       <p class="auth-footer auth-footer--center">

@@ -6,6 +6,7 @@ import type {
   CreateRolePayload,
   ExamCategory,
   QuickMetric,
+  TestCatalogSection,
   TestSeries,
 } from '@/types/api';
 
@@ -113,9 +114,21 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const activity = ref<ActivityItem[]>(demoActivity);
   const categories = ref<ExamCategory[]>(examCategories);
   const quickMetricsCards = ref<QuickMetric[]>(quickMetrics);
+  const testCatalog = ref<TestCatalogSection[]>([]);
+  const catalogStatus = ref<'idle' | 'loading'>('idle');
+  const catalogError = ref('');
+  const hasLoadedCatalog = ref(false);
+  const loadedCatalogPlan = ref<string | null>(null);
   const roleStatus = ref<'idle' | 'loading'>('idle');
   const roleMessage = ref('');
   const roleError = ref('');
+
+  const testFilterOptions = computed(() =>
+    testCatalog.value.map((section) => ({
+      value: section.id,
+      label: section.title,
+    })),
+  );
 
   const stats = computed(() => {
     const completionAverage = Math.round(
@@ -129,6 +142,30 @@ export const useDashboardStore = defineStore('dashboard', () => {
       { label: 'Current Streak', value: '09 days', tone: 'slate' },
     ];
   });
+
+  function getFilteredTestCatalog(filterId: string) {
+    if (filterId === 'all') {
+      return testCatalog.value;
+    }
+
+    return testCatalog.value.filter((section) => section.id === filterId);
+  }
+
+  async function fetchTestCatalog(plan?: string | null) {
+    catalogStatus.value = 'loading';
+    catalogError.value = '';
+
+    try {
+      testCatalog.value = await api.getTestCatalog(plan);
+      hasLoadedCatalog.value = true;
+      loadedCatalogPlan.value = plan ?? 'basic';
+    } catch (err) {
+      catalogError.value = err instanceof Error ? err.message : 'Unable to load test catalog';
+      throw err;
+    } finally {
+      catalogStatus.value = 'idle';
+    }
+  }
 
   async function createRole(payload: CreateRolePayload, token?: string | null) {
     roleStatus.value = 'loading';
@@ -151,7 +188,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
     activity,
     categories,
     quickMetricsCards,
+    testCatalog,
+    catalogStatus,
+    catalogError,
+    hasLoadedCatalog,
+    loadedCatalogPlan,
+    testFilterOptions,
     stats,
+    getFilteredTestCatalog,
+    fetchTestCatalog,
     roleStatus,
     roleMessage,
     roleError,

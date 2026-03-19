@@ -8,6 +8,7 @@ export interface LoginResponse {
   username: string;
   email: string;
   token: string;
+  subscriptionPlan: SubscriptionPlanSummary | null;
 }
 
 export interface RegisterPayload {
@@ -59,4 +60,31 @@ export interface QuickMetric {
   label: string;
   value: string;
   caption: string;
+}
+
+export interface TestCatalogItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  accent: 'gold' | 'blue' | 'teal' | 'slate';
+  visibleToPlans?: string[];
+}
+
+export interface TestCatalogSection {
+  id: string;
+  title: string;
+  description?: string;
+  accent?: 'gold' | 'blue' | 'teal' | 'slate';
+  items: TestCatalogItem[];
+}
+
+export interface SubscriptionPlanSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  priceLabel?: string | null;
+  isDefault: boolean;
+  features: string[];
 }
