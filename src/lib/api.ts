@@ -8,7 +8,9 @@ import type {
   TestViewResourcesResponse,
   TestViewTestsResponse,
   TestInstructionsResponse,
+  TestResultResponse,
   TestSessionResponse,
+  TestSubmitPayload,
   TestCatalogSection,
 } from '@/types/api';
 
@@ -150,6 +152,23 @@ export const api = {
     const response = await request<ApiEnvelope<TestSessionResponse>>(
       `/tests/${testSlug}/session`,
       { token },
+    );
+
+    return response.data;
+  },
+
+  async submitTest(
+    testSlug: string,
+    payload: TestSubmitPayload,
+    token?: string | null,
+  ) {
+    const response = await request<ApiEnvelope<TestResultResponse>>(
+      `/tests/${testSlug}/submit`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        token,
+      },
     );
 
     return response.data;

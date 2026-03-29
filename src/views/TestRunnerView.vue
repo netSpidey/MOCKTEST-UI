@@ -29,6 +29,21 @@ function pauseAndReturn() {
   testRunnerStore.pauseTest();
 }
 
+function goToResultPage() {
+  router.push(`/tests/${route.params.examSlug}/${route.params.testSlug}/result`);
+}
+
+async function confirmSubmit() {
+  try {
+    const result = await testRunnerStore.submitTest(authStore.user?.token ?? null);
+    if (result) {
+      goToResultPage();
+    }
+  } catch (error) {
+    console.error('Unable to submit test', error);
+  }
+}
+
 function handlePausedAcknowledge() {
   testRunnerStore.dismissPauseMessage();
   router.push(`/tests/${route.params.examSlug}`);
@@ -44,10 +59,10 @@ onMounted(async () => {
 });
 
 watch(
-  () => testRunnerStore.submitted,
-  (submitted) => {
-    if (submitted) {
-      router.push(`/tests/${route.params.examSlug}/${route.params.testSlug}/instructions`);
+  () => testRunnerStore.autoSubmitRequired,
+  async (autoSubmitRequired) => {
+    if (autoSubmitRequired) {
+      await confirmSubmit();
     }
   },
 );
@@ -194,11 +209,69 @@ onBeforeUnmount(() => {
         <button type="button" class="runner-primary" @click="testRunnerStore.saveAndNext()">
           SAVE & NEXT
         </button>
-        <button type="button" class="runner-primary runner-primary--submit" @click="testRunnerStore.submitTest()">
+        <button
+          type="button"
+          class="runner-primary runner-primary--submit"
+          @click="testRunnerStore.openSubmitSummary()"
+        >
           SUBMIT TEST
         </button>
       </div>
     </footer>
+
+    <div v-if="testRunnerStore.submitSummaryVisible" class="runner-pause-overlay">
+      <div class="runner-summary-dialog">
+        <h2>Test Summary</h2>
+        <p class="runner-summary-dialog__subtitle">Overall summary of your test paper</p>
+
+        <div class="runner-summary-table-wrap">
+          <table class="runner-summary-table">
+            <thead>
+              <tr>
+                <th>Section</th>
+                <th>Answered</th>
+                <th>Not Answered</th>
+                <th>Marked for Review</th>
+                <th>Not Visited</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="section in testRunnerStore.sectionSummary" :key="section.sectionId">
+                <td>{{ section.sectionName }}</td>
+                <td>{{ section.answered }}</td>
+                <td>{{ section.notAnswered }}</td>
+                <td>{{ section.markedForReview }}</td>
+                <td>{{ section.notVisited }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="runner-summary-dialog__question">Do you wish to submit this test?</p>
+        <p v-if="testRunnerStore.error" class="form-message is-error runner-summary-dialog__error">
+          {{ testRunnerStore.error }}
+        </p>
+
+        <div class="runner-summary-dialog__actions">
+          <button
+            type="button"
+            class="runner-secondary"
+            :disabled="testRunnerStore.isSubmitting"
+            @click="testRunnerStore.closeSubmitSummary()"
+          >
+            BACK
+          </button>
+          <button
+            type="button"
+            class="runner-primary"
+            :disabled="testRunnerStore.isSubmitting"
+            @click="confirmSubmit"
+          >
+            {{ testRunnerStore.isSubmitting ? 'SUBMITTING...' : 'SUBMIT TEST' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div v-if="testRunnerStore.pauseMessageVisible" class="runner-pause-overlay">
       <div class="runner-pause-dialog">
