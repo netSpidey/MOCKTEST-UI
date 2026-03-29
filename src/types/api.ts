@@ -201,6 +201,13 @@ export interface TestQuestionOption {
   text: string;
 }
 
+export type TestQuestionStatus =
+  | 'notVisited'
+  | 'notAnswered'
+  | 'answered'
+  | 'markedForReview'
+  | 'answeredAndMarkedForReview';
+
 export interface TestSessionSection {
   id: string;
   sectionNumber: number;
@@ -241,4 +248,69 @@ export interface TestSessionResponse {
   supportedLanguages: string[];
   sections: TestSessionSection[];
   questions: TestSessionQuestion[];
+}
+
+export interface TestSubmitPayload {
+  answers: Record<string, string | null>;
+  questionStatuses: Record<string, TestQuestionStatus>;
+  timeRemainingSeconds: number;
+  selectedLanguage: string;
+}
+
+export interface TestResultSectionAnalysis {
+  sectionId: string;
+  sectionName: string;
+  answered: number;
+  notAnswered: number;
+  markedForReview: number;
+  notVisited: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  unanswered: number;
+  score: number;
+  maxScore: number;
+}
+
+export interface TestResultQuestionAnalysis {
+  questionId: string;
+  questionNumber: number;
+  sectionId: string;
+  sectionName: string;
+  prompt: string;
+  selectedOptionKey: string | null;
+  selectedOptionText: string | null;
+  correctOptionKey: string;
+  correctOptionText: string;
+  status: TestQuestionStatus;
+  outcome: 'correct' | 'incorrect' | 'unanswered';
+  marksAwarded: number;
+  maxMarks: number;
+  negativeMarks: number;
+}
+
+export interface TestResultResponse {
+  test: {
+    slug: string;
+    title: string;
+    examSlug: string;
+    examTitle: string;
+  };
+  summary: {
+    totalQuestions: number;
+    answered: number;
+    notAnswered: number;
+    markedForReview: number;
+    notVisited: number;
+    correctAnswers: number;
+    incorrectAnswers: number;
+    unanswered: number;
+    score: number;
+    maxScore: number;
+    percentage: number;
+    submittedAt: string;
+    selectedLanguage: string;
+    timeSpentSeconds: number;
+  };
+  sections: TestResultSectionAnalysis[];
+  questions: TestResultQuestionAnalysis[];
 }

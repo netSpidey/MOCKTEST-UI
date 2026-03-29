@@ -4,16 +4,14 @@ import { api } from '@/lib/api';
 import type {
   TestInstructionsResponse,
   TestQuestionOption,
+  TestQuestionStatus,
+  TestResultResponse,
   TestSessionQuestion,
   TestSessionResponse,
+  TestSessionSection,
 } from '@/types/api';
 
-type QuestionStatus =
-  | 'notVisited'
-  | 'notAnswered'
-  | 'answered'
-  | 'markedForReview'
-  | 'answeredAndMarkedForReview';
+type QuestionStatus = TestQuestionStatus;
 
 type AnswerMap = Record<string, string | null>;
 type StatusMap = Record<string, QuestionStatus>;
@@ -51,6 +49,10 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
   const submitted = ref(false);
   const paused = ref(false);
   const pauseMessageVisible = ref(false);
+  const submitSummaryVisible = ref(false);
+  const isSubmitting = ref(false);
+  const autoSubmitRequired = ref(false);
+  const submissionResult = ref<TestResultResponse | null>(null);
 
   const currentQuestion = computed<TestSessionQuestion | null>(
     () => session.value?.questions[currentQuestionIndex.value] ?? null,
@@ -94,6 +96,10 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
 
     return counts;
   });
+
+  const sectionSummary = computed(() =>
+    (session.value?.sections ?? []).map((section) => buildSectionSummary(section)),
+  );
 
   function getPersistedAttempt(): PersistedAttempt | null {
     if (!canUseStorage()) {
@@ -151,6 +157,10 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
     submitted.value = false;
     paused.value = false;
     pauseMessageVisible.value = false;
+    submitSummaryVisible.value = false;
+    isSubmitting.value = false;
+    autoSubmitRequired.value = false;
+    submissionResult.value = null;
   }
 
   function initializeQuestionState(questions: TestSessionQuestion[]) {
@@ -161,6 +171,52 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
       answers.value[question.id] = null;
       questionStatuses.value[question.id] = 'notVisited';
     }
+  }
+
+  function buildSectionSummary(section: TestSessionSection) {
+    const questions = session.value?.questions.filter(
+      (question) => question.sectionId === section.id,
+    ) ?? [];
+
+    let answered = 0;
+    let notAnswered = 0;
+    let markedForReview = 0;
+    let notVisited = 0;
+
+    questions.forEach((question) => {
+      const status = questionStatuses.value[question.id];
+      const hasAnswer = Boolean(answers.value[question.id]);
+
+      if (hasAnswer) {
+        answered += 1;
+      } else if (status === 'notVisited') {
+        notVisited += 1;
+      } else {
+        notAnswered += 1;
+      }
+
+      if (status === 'markedForReview' || status === 'answeredAndMarkedForReview') {
+        markedForReview += 1;
+      }
+    });
+
+    return {
+      sectionId: section.id,
+      sectionName: section.sectionName,
+      answered,
+      notAnswered,
+      markedForReview,
+      notVisited,
+    };
+  }
+
+  function buildSubmitPayload() {
+    return {
+      answers: answers.value,
+      questionStatuses: questionStatuses.value,
+      timeRemainingSeconds: timeRemainingSeconds.value,
+      selectedLanguage: selectedLanguage.value,
+    };
   }
 
   function setCurrentQuestion(index: number) {
@@ -265,8 +321,7 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
       if (timeRemainingSeconds.value <= 1) {
         timeRemainingSeconds.value = 0;
         resetTimer();
-        submitted.value = true;
-        clearPersistedAttempt();
+        requestAutoSubmit();
         return;
       }
 
@@ -348,16 +403,62 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
     pauseMessageVisible.value = false;
   }
 
+  function openSubmitSummary() {
+    if (!session.value || paused.value || submitted.value) {
+      return;
+    }
+
+    submitSummaryVisible.value = true;
+  }
+
+  function closeSubmitSummary() {
+    submitSummaryVisible.value = false;
+  }
+
   function isResumableTest(testSlug: string) {
     return resumableTestSlug.value === testSlug;
   }
 
-  function submitTest() {
-    submitted.value = true;
-    pauseMessageVisible.value = false;
-    paused.value = false;
-    resetTimer();
-    clearPersistedAttempt();
+  function requestAutoSubmit() {
+    if (!session.value || submitted.value || isSubmitting.value) {
+      return;
+    }
+
+    submitSummaryVisible.value = false;
+    autoSubmitRequired.value = true;
+  }
+
+  async function submitTest(token?: string | null) {
+    if (!session.value || !currentTestSlug.value || isSubmitting.value) {
+      return null;
+    }
+
+    isSubmitting.value = true;
+    error.value = '';
+
+    try {
+      const result = await api.submitTest(currentTestSlug.value, buildSubmitPayload(), token);
+      submissionResult.value = result;
+      submitted.value = true;
+      pauseMessageVisible.value = false;
+      paused.value = false;
+      submitSummaryVisible.value = false;
+      autoSubmitRequired.value = false;
+      resetTimer();
+      clearPersistedAttempt();
+      return result;
+    } catch (err) {
+      autoSubmitRequired.value = false;
+      error.value = err instanceof Error ? err.message : 'Unable to submit test';
+      throw err;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  function clearSubmissionResult() {
+    submissionResult.value = null;
+    submitted.value = false;
   }
 
   function teardown() {
@@ -377,9 +478,14 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
     answers,
     questionStatuses,
     paletteCounts,
+    sectionSummary,
     submitted,
     paused,
     pauseMessageVisible,
+    submitSummaryVisible,
+    isSubmitting,
+    autoSubmitRequired,
+    submissionResult,
     hasActiveAttempt,
     resumableTestSlug,
     loadInstructions,
@@ -393,8 +499,12 @@ export const useTestRunnerStore = defineStore('test-runner', () => {
     goToQuestion,
     pauseTest,
     dismissPauseMessage,
+    openSubmitSummary,
+    closeSubmitSummary,
     isResumableTest,
+    requestAutoSubmit,
     submitTest,
+    clearSubmissionResult,
     teardown,
   };
 });

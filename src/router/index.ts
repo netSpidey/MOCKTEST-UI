@@ -4,6 +4,7 @@ import AdminView from '@/views/AdminView.vue';
 import DashboardView from '@/views/DashboardView.vue';
 import LandingView from '@/views/LandingView.vue';
 import TestInstructionsView from '@/views/TestInstructionsView.vue';
+import TestResultView from '@/views/TestResultView.vue';
 import TestRunnerView from '@/views/TestRunnerView.vue';
 import TestsView from '@/views/TestsView.vue';
 import ViewTestView from '@/views/ViewTestView.vue';
@@ -62,6 +63,12 @@ export const router = createRouter({
       path: '/tests/:examSlug/:testSlug/start',
       name: 'test-runner',
       component: TestRunnerView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tests/:examSlug/:testSlug/result',
+      name: 'test-result',
+      component: TestResultView,
       meta: { requiresAuth: true },
     },
   ],
